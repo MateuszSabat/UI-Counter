@@ -5,11 +5,36 @@ using UnityEngine.UI;
 
 namespace UnityEngine.UI.Counter
 {
+    [RequireComponent(typeof(Image))]
+    [RequireComponent(typeof(RectTransform))]
     public class Counter : MonoBehaviour
     {
         public Font font;
-        public RectTransform rt;
-        public Image image;
+        private RectTransform rt;
+        private Image image;
+
+        public void Start()
+        {
+            font.SetComputeData();
+
+            rt = GetComponent<RectTransform>();
+            image = GetComponent<Image>();
+
+            Write(1234567890);
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Write(Random.Range(0, int.MaxValue));
+            }
+        }
+
+        public void OnApplicationQuit()
+        {
+            font.ReleaseComputeData();
+        }
 
         public void Write(int number)
         {
@@ -17,11 +42,6 @@ namespace UnityEngine.UI.Counter
             rt.sizeDelta = new Vector2(rt.sizeDelta.y * s.rect.width / s.rect.height, rt.sizeDelta.y);
 
             image.sprite = font.Write(number);
-        }
-
-        public void Start()
-        {
-            Write(1234567890);
         }
     }
 }

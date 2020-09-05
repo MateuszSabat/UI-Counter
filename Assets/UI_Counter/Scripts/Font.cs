@@ -10,31 +10,25 @@ namespace UnityEngine.UI.Counter
     [CreateAssetMenu(fileName = "New UI Counter Font", menuName = "UI.Counter/Font")]
     public class Font : ScriptableObject
     {
+        [Header("Write Digits")]
+        public ComputeShader writeDigitCompute;
+
         public Texture2D[] digits;
-        Texture2D GetTexture(char c, Color color)
-        {
-            Texture2D t = digits[c - 48];
+        private ComputeBuffer[] digitsBuffer;
 
-            for (int x = 0; x < t.width; x++)
-                for (int y = 0; y < t.height; y++)
-                {
-                    Color col = t.GetPixel(x, y);
-                    if (col.a > 0.5f)
-                        t.SetPixel(x, y, color);
-                }
+        public int digitWidth;
+        public int digitHeight;
 
-            return t;
-        }
-        [Space(5f)]
         public Color[] colors;
         int GetColorIndex(int last)
         {
             int i = (last + Random.Range(1, colors.Length)) % colors.Length;
             return i;
         }
-        [Space(5f)]
+
         public int spacing;
-        [Space(5f)]
+
+        [Header("Framing")]
         public ComputeShader framingCompute;
         [Space(2f)]
         public int first;
@@ -45,63 +39,109 @@ namespace UnityEngine.UI.Counter
         public Color secondColor;
         public Color thirdColor;
 
-
-        public Sprite Write(int number)
+        float[] GetDigitToCompute(int i)
         {
-            if (number < 0)
-                number = -number;
+            float[] digit = new float[digitWidth * digitHeight];
 
-            string s = number.ToString();
+            int index = 0;
 
-            Texture2D[] chars = new Texture2D[s.Length];
+            for(int y=0; y<digitHeight; y++)
+                for(int x =0; x<digitWidth; x++)
+                {
 
-            int width = spacing + 2 * third;
-            int height = digits[0].height + 2 * third;
+                    digit[index] = digits[i].GetPixel(x, y).a > 0.5f ? 1 : 0;
+                    index++;
+                }
 
-            int colorIndex = Random.Range(0, colors.Length);
+            return digit;
+        }
+        public void SetComputeData()
+        {
+            int count = digitWidth * digitHeight;
+            int stride = sizeof(float);
 
-            for(int i=0; i<s.Length; i++)
+            digitsBuffer = new ComputeBuffer[10]; 
+            for(int i=0; i<10; i++)
             {
+                digitsBuffer[i] = new ComputeBuffer(count, stride);
+                digitsBuffer[i].SetData(GetDigitToCompute(i));
+            }
+
+            writeDigitCompute.SetBuffer(0, "zero", digitsBuffer[0]);
+            writeDigitCompute.SetBuffer(0, "one", digitsBuffer[1]);
+            writeDigitCompute.SetBuffer(0, "two", digitsBuffer[2]);
+            writeDigitCompute.SetBuffer(0, "three", digitsBuffer[3]);
+            writeDigitCompute.SetBuffer(0, "four", digitsBuffer[4]);
+            writeDigitCompute.SetBuffer(0, "five", digitsBuffer[5]);
+            writeDigitCompute.SetBuffer(0, "six", digitsBuffer[6]);
+            writeDigitCompute.SetBuffer(0, "seven", digitsBuffer[7]);
+            writeDigitCompute.SetBuffer(0, "eight", digitsBuffer[8]);
+            writeDigitCompute.SetBuffer(0, "nine", digitsBuffer[9]);
+
+            writeDigitCompute.SetInt("digitWidth", digitWidth);
+            writeDigitCompute.SetInt("digitHeight", digitHeight);
+        }
+        public void ReleaseComputeData()
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                digitsBuffer[i].Release();
+            }
+        }
+
+        public Sprite Write(int Number)
+        {
+            if (Number < 0)
+                Number = -Number;
+
+            string s = Number.ToString();
+
+            int[] digits = new int[s.Length];
+            for (int i = 0; i < digits.Length; i++)
+                digits[i] = s[i] - 48;
+
+            Color[] digitColors = new Color[s.Length];
+            int colorIndex = Random.Range(0, digitColors.Length);
+            for (int i = 0; i < s.Length; i++) {
+                digitColors[i] = colors[colorIndex];
                 colorIndex = GetColorIndex(colorIndex);
-                chars[i] = GetTexture(s[i], colors[colorIndex]);
-                width += spacing + chars[i].width;
             }
 
-            Texture2D t = new Texture2D(width, height);
-            int x = third;
+            int length = digits.Length;
 
-            Color[] space = new Color[width * height];
-            for (int i = 0; i < space.Length; i++)
-                space[i] = new Color(0, 0, 0, 0);
-            t.SetPixels(space);
+            int width = length * (digitWidth + spacing) + third + third;
+            int height = digitHeight + third + third;
 
-            space = new Color[spacing * height];
-            for (int i = 0; i < space.Length; i++)
-            {
-                space[i] = new Color(0, 0, 0, 0);
-            }
+            ComputeBuffer digitsBuffer = new ComputeBuffer(length, sizeof(int));
+            ComputeBuffer colorsBuffer = new ComputeBuffer(length, sizeof(float) * 4);
 
-            t.SetPixels(x, 0, spacing, height, space);
-            x += spacing;
+            digitsBuffer.SetData(digits);
+            colorsBuffer.SetData(digitColors);
 
-            for (int i = 0; i < chars.Length; i++)
-            {
-                Color[] cs = chars[i].GetPixels();
+            RenderTexture rtDigits = new RenderTexture(width, height, 32);
+            rtDigits.enableRandomWrite = true;
+            rtDigits.Create();
 
-                t.SetPixels(x, third, chars[i].width, chars[i].height, cs);
-                x += chars[i].width;
+            writeDigitCompute.SetInt("width", width);
+            writeDigitCompute.SetInt("height", height);
+            writeDigitCompute.SetInt("frame", third);
+            writeDigitCompute.SetInt("spacing", spacing);
+            writeDigitCompute.SetInt("length", digits.Length);
+            writeDigitCompute.SetBuffer(0, "digits", digitsBuffer);
+            writeDigitCompute.SetBuffer(0, "colors", colorsBuffer);
+            writeDigitCompute.SetTexture(0, "Result", rtDigits);
 
-                t.SetPixels(x, 0, spacing, height, space);
-                x += spacing;
-            }
-            t.Apply();
+            int X = Mathf.CeilToInt(width / 8f);
+            int Y = Mathf.CeilToInt(height / 8f);
 
-            RenderTexture rt = new RenderTexture(t.width, t.height, 32);
-            rt.enableRandomWrite = true;
-            rt.Create();
+            writeDigitCompute.Dispatch(0, X, Y, 1);
 
-            framingCompute.SetInt("width", t.width);
-            framingCompute.SetInt("height", t.height);
+            RenderTexture rtFull = new RenderTexture(width, height, 32);
+            rtFull.enableRandomWrite = true;
+            rtFull.Create();
+
+            framingCompute.SetInt("width", width);
+            framingCompute.SetInt("height", height);
 
             framingCompute.SetFloat("first", first);
             framingCompute.SetFloat("second", second);
@@ -111,17 +151,22 @@ namespace UnityEngine.UI.Counter
             framingCompute.SetVector("secondColor", secondColor);
             framingCompute.SetVector("thirdColor", thirdColor);
 
-            framingCompute.SetTexture(0, "Input", t);
-            framingCompute.SetTexture(0, "Result", rt);
-
-            int X = Mathf.CeilToInt(t.width / 8f);
-            int Y = Mathf.CeilToInt(t.height / 8f);
+            framingCompute.SetTexture(0, "Input", rtDigits);
+            framingCompute.SetTexture(0, "Result", rtFull);
 
             framingCompute.Dispatch(0, X, Y, 1);
 
-            RenderTexture.active = rt;
-            t.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+            RenderTexture active = RenderTexture.active;
+            RenderTexture.active = rtFull;
+            Texture2D t = new Texture2D(width, height);
+            t.ReadPixels(new Rect(0, 0, rtFull.width, rtFull.height), 0, 0);
             t.Apply();
+            RenderTexture.active = active;
+
+            digitsBuffer.Release();
+            colorsBuffer.Release();
+            rtDigits.Release();
+            rtFull.Release();
 
             return Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0.5f, 0.5f));
         }

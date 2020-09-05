@@ -1,0 +1,75 @@
+﻿#pragma kernel CSMain
+
+uint width;
+uint height;
+uint frame;
+
+uint digitWidth;
+uint digitHeight;
+
+Buffer<float> one;
+Buffer<float> two;
+Buffer<float> three;
+Buffer<float> four;
+Buffer<float> five;
+Buffer<float> six;
+Buffer<float> seven;
+Buffer<float> eight;
+Buffer<float> nine;
+Buffer<float> zero;
+
+uint spacing;
+
+uint length;
+Buffer<uint> digits;
+Buffer<float4> colors;
+
+RWTexture2D<float4> Result;
+
+float4 ReadDigit(uint x, uint y, uint digit, float4 color) {
+    if (x >= digitWidth)
+        return 0;
+
+    int i = y * digitWidth + x;
+
+    switch (digit) {
+        case 1:
+            return one[i] * color;
+        case 2:
+            return two[i] * color;
+        case 3:
+            return three[i] * color;
+        case 4:
+            return four[i] * color;
+        case 5:
+            return five[i] * color;
+        case 6:
+            return six[i] * color;
+        case 7:
+            return seven[i] * color;
+        case 8:
+            return eight[i] * color;
+        case 9:
+            return nine[i] * color;
+        default:
+            return zero[i] * color;
+    }
+}
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x > width || id.y > height)
+        return;
+
+    if (id.x < frame || id.y < frame || id.x > width - frame || id.y > height - frame) {
+        Result[id.xy] = 0;
+        return;
+    }
+
+    uint i = (id.x - frame) / (digitWidth + spacing);
+
+    uint start = i * (digitWidth + spacing) + frame;
+
+    Result[id.xy] = ReadDigit(id.x - start, id.y - frame, digits[i], colors[i]);
+}

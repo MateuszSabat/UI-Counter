@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0217fab0abb4642468a24922c7ecc6cc, type: 3}
+  m_Name: Bouncing Ball Font
+  m_EditorClassIdentifier: 
+  digits:
+  - {fileID: 2800000, guid: 777d963489027a849a401bb2fb711cd7, type: 3}
+  - {fileID: 2800000, guid: 76b25c1d679ce044190089a8efb4e058, type: 3}
+  - {fileID: 2800000, guid: dcfbe212f33e77049a7c02f29088199e, type: 3}
+  - {fileID: 2800000, guid: e70af86e2436314459257c4586774cb2, type: 3}
+  - {fileID: 2800000, guid: 8de620c5d28ff1a4fad505c2ba4187d2, type: 3}
+  - {fileID: 2800000, guid: c28f788146231ea4d8776504d6d06d73, type: 3}
+  - {fileID: 2800000, guid: 85f4c4b2fc77dec4ab34d17c85db01f8, type: 3}
+  - {fileID: 2800000, guid: 7ae350db037d4434c9e42f5be0008e4e, type: 3}
+  - {fileID: 2800000, guid: 831239fe56b22ad4a897ea8a035f4ae7, type: 3}
+  - {fileID: 2800000, guid: dace3e6a2d2ebe54da3f3646cd898285, type: 3}
+  colors:
+  - {r: 0.4156863, g: 0.6156863, b: 0.9176471, a: 1}
+  - {r: 0.9058824, g: 0.4156863, b: 0.39607847, a: 1}
+  - {r: 0.9490197, g: 0.5921569, b: 0.29803923, a: 1}
+  - {r: 0.9686275, g: 0.90196085, b: 0.30980393, a: 1}
+  - {r: 0.54509807, g: 0.9686275, b: 0.30980393, a: 1}
+  - {r: 0.36078432, g: 0.8431373, b: 0.5764706, a: 1}
+  - {r: 0.4901961, g: 0.909804, b: 0.85098046, a: 1}
+  - {r: 0.6313726, g: 0.5529412, b: 0.8941177, a: 1}
+  - {r: 0.9333334, g: 0.454902, b: 0.91372555, a: 1}
+  - {r: 0.8941177, g: 0.58431375, b: 0.6392157, a: 1}
+  spacing: 5
+  framingCompute: {fileID: 7200000, guid: d8d77afeeb574254f91110b6e5b4ccef, type: 3}
+  first: 3
+  second: 13
+  third: 15
+  firstColor: {r: 0, g: 0, b: 0, a: 1}
+  secondColor: {r: 0.827451, g: 0.8039216, b: 0.75686276, a: 1}
+  thirdColor: {r: 0, g: 0, b: 0, a: 1}
